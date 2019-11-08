@@ -6,8 +6,6 @@ typedef enum {
   LIGHTSUP,
 } Status;
 
-//const char WIFI_SSID[]="Apt 2C";
-//const char WIFI_PASSWORD[]="84503503";
 const char WIFI_SSID[]="UCInet Mobile Access";
 const char WIFI_PASSWORD[]="";
 const int LEDPIN=2;
@@ -24,11 +22,10 @@ unsigned long blink10Sec=millis();
 int sensorStart=0;
 
 Status LEDStatus=IDLE;
-bool tt=false;
 char packetBuffer[32];
-bool record=false;
+int record=0;
 bool recordBlink=false;
-int blinkRound=0;
+
 void udp_send(char* data);
 
 void setup() {
@@ -36,15 +33,14 @@ void setup() {
   delay(1000);
   pinMode(LEDPIN, OUTPUT);
   pinMode(LED_BUILTIN, OUTPUT);
+  Serial.print("Connecting to ");
+  Serial.print(WIFI_SSID); 
   while (WiFi.status() != WL_CONNECTED) {
-        Serial.print("Connecting to ");
-        Serial.print(WIFI_SSID); Serial.println("...");
-        Serial.println(WiFi.macAddress());
-
+        Serial.print("...");
         WiFi.begin(WIFI_SSID, WIFI_PASSWORD); 
         delay(5000);
     }
-    Serial.println("Wi-Fi Connected");
+    Serial.println("\nWi-Fi Connected");
 
   Serial.println("\nIP obtained: " + WiFi.localIP().toString());
   Udp.begin(UDPPort);
@@ -64,6 +60,8 @@ void loop() {
       packetBuffer[packetLength] = '\0';
     }
     Serial.print("Message received: "); Serial.println(packetBuffer);
+
+
     // Packet format: #RL
     // Packet Sample: #01
     if (packetBuffer[0]=='#') { // Light up led
@@ -75,20 +73,18 @@ void loop() {
         reflectTime=millis();
         LEDStatus = LIGHTSUP;
       }
-    } else if (packetBuffer[0]=='*') {
+    }
+
+    // Packet sample: *L1
+    else if (packetBuffer[0]=='*') {
       if (packetBuffer[1]=='L' && packetBuffer[2]=='1') {
         Serial.println("Personal Record!");
-        record=true;
+        record=1;
         blink10Sec=millis();
       }
     }
   }
-/*  
-  digitalWrite(LEDPIN, (tt=!tt));
-  sensorStart = analogRead(SENSORPIN);
-  Serial.print("Starting brightness: "); Serial.println(sensorStart);
-  delay(1000);
-*/
+
   if (LEDStatus==LIGHTSUP) {
     int sensorValue = analogRead(SENSORPIN);
     if ((sensorStart - sensorValue) >= SENSORWINDOW) {
@@ -100,15 +96,16 @@ void loop() {
     }
   }
 
-  if (record) {
-    if ((millis() - blink10Sec) >= 300) {
-      recordBlink=!recordBlink;
+  if (record != 0) {
+    if ((millis() - blink10Sec) >= 300) { // Blink every 0.3 seconds
+      recordBlink =! recordBlink;
       digitalWrite(LED_BUILTIN, recordBlink);
-      blinkRound++;
+      record++;
       blink10Sec = millis();
     }
-    if (blinkRound >= 20) {
-      record = false;
+    if (record >= 20) {
+      record = 0;
+      recordBlink = false;
       digitalWrite(LED_BUILTIN, false);
     }
   }
