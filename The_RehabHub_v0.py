@@ -1,5 +1,5 @@
 '''
-v1 
+v2
 
 Master of embedded cyber-physical systems
 ECPS 295  |  Sensors actuators and networks
@@ -81,10 +81,9 @@ while True:
 
         # IF RIGHT LED TOUCHED
         if(data[0]=="R"):
+            TR=10*int(data[1])+int(data[2])
             print "Message received: ",data,"  <-- from: ",addr
-            print ">> RIGHT LED WAS REACHED! "
-            TR=int(data[1:2])
-            print "User needed ",TR," sec to touch RIGHT LED"
+            print ">> RIGHT LED WAS REACHED! \n User needed ",TR," sec to touch RIGHT LED"
             TRs.append(TR)
 
             #IF personal record:
@@ -95,10 +94,9 @@ while True:
 
         # IF LEFT LED TOUCHED
         if(data[0]=="L"):
+            TL=10*int(data[1])+int(data[2])
             print "Message received: ",data,"  <-- from: ",addr
-            print ">> LEFT LED WAS REACHED! "
-            TL=int(data[1:2])
-            print "User needed ",TL," sec to touch LEFT LED\n"
+            print ">> LEFT LED WAS REACHED! \n User needed ",TL," sec to touch LEFT LED\n"
             TLs.append(TL)
 
             #IF personal record:
