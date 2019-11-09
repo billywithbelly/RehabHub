@@ -57,8 +57,8 @@ UDP_PORT = 8888
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
 sock.bind((RPi_IP, UDP_PORT))
 sock.settimeout(10000.0)
-
-i=1
+receiveBoth=0
+testCounter=1
 
 file = open('dataLog.txt','w') 
 
@@ -72,8 +72,8 @@ while True:
     message="#"+str(statusR)+"1" #str(statusL)
     sock.sendto(message,(ESP_IP,UDP_PORT))
     print "\n============================================================"
-    print "PLAYING @ ROUND ",i, "--> Message sent: ",message,"\n"
-    i+=1
+    print "PLAYING @ ROUND ",testCounter, "--> Message sent: ",message,"\n"
+    testCounter+=1
     #T0=time.time()
     #print "T0=",T0
 
@@ -83,10 +83,11 @@ while True:
 
         # IF RIGHT LED TOUCHED
         if(data[0]=="R"):
+            receiveBoth += 1
             TR=10*int(data[1])+int(data[2])
             print "Message received: ",data,"  <-- from: ",addr
             print ">> RIGHT LED WAS REACHED! \n User needed ",TR," sec to touch RIGHT LED"
-            file.write("R,"+str(TR))
+            file.write("R,"+str(testCounter)+','+str(TR))
             TRs.append(TR)
 
             #IF personal record:
@@ -97,10 +98,11 @@ while True:
 
         # IF LEFT LED TOUCHED
         if(data[0]=="L"):
+            receiveBoth += 1
             TL=10*int(data[1])+int(data[2])
             print "Message received: ",data,"  <-- from: ",addr
             print ">> LEFT LED WAS REACHED! \n User needed ",TL," sec to touch LEFT LED\n"
-            file.write("L,"+str(TL))
+            file.write("L,"+str(testCounter)+','+str(TL))
             TLs.append(TL)
 
             #IF personal record:
@@ -108,9 +110,10 @@ while True:
             if(TL==max(TLs)):
                 print "*** New left personal record! ***"
                 message="*L1"
-
-        sock.sendto(message,(ESP_IP,UDP_PORT))
-        break;
+        if receiveBoth >= 2:
+            sock.sendto(message,(ESP_IP,UDP_PORT))
+            receiveBoth = 0
+            break;
 
     time.sleep(10)
 
